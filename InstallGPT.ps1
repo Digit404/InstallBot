@@ -1,7 +1,13 @@
 param (
+    [Parameter(Mandatory=$true)]
     [string]$file,
-    [string]$action
+    [Parameter()]
+    [switch]$SafeMode,
+    [Parameter(ValueFromRemainingArguments)]
+    [string]$action = "install (default)"
 )
+
+# using this program is a risk, but it's a calculated risk
 
 $MODEL = "gpt-4o-mini"
 $SYSTEM_MESSAGE = @'
@@ -122,6 +128,7 @@ $messages = @(
 )
 
 $finished = $false
+$global:executionLog = @()
 
 # main loop
 do {
@@ -158,6 +165,30 @@ do {
             # handle the function call
             switch ($functionName) {
                 "command" {
+                    $global:executionLog += $arguments.command
+
+                    if ($SafeMode) {
+                        Write-Host "The install assistant wants to execute the following command:"
+                        Write-Host $arguments.command -ForegroundColor Cyan
+                        $confirmation = Read-Host "Do you want to allow this command to run? (yes/no)"
+                        if ($confirmation -notlike "y*") {
+                            Write-Host "Command execution was denied by the user." -ForegroundColor Red
+                            $commandOutput = "Command execution was denied by the user."
+                            # let the assistant know of his crimes
+                            $messages += @{
+                                role         = 'tool';
+                                content      = @(
+                                    @{
+                                        text = $commandOutput;
+                                        type = 'text'
+                                    }
+                                );
+                                tool_call_id = $tool_call_id
+                            }
+                            continue
+                        }
+                    }
+
                     # execute the command and capture the output to give to the bot
                     try {
                         $commandResult = Invoke-Expression -Command $arguments.command
@@ -181,7 +212,7 @@ do {
                 }
                 "exit" {
                     # display the exit message and exit the loop
-                    Write-Host $arguments.message
+                    Write-Host $arguments.message -ForegroundColor Green
                     $finished = $true
                     break
                 }
@@ -221,7 +252,7 @@ do {
             # display the assistant's message
             foreach ($part in $reply.content) {
                 if ($part.type -eq 'text') {
-                    Write-Host $part.text
+                    Write-Host $part.text -ForegroundColor Yellow
                 }
             }
 
