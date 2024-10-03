@@ -11,7 +11,8 @@ param (
 
 $MODEL = "gpt-4o-mini"
 $SYSTEM_MESSAGE = @'
-Your task is to perform the specified action on the provided file using PowerShell. Take as many turns as you need. Make educated assumptions about the intended outcome, even if it requires taking some risks. Ensure that you keep your workspace tidy by using the Temp folder effectively, and make sure to clean up after you're done. Write efficient and smart PowerShell code, avoiding multiple commands in place of one if achievable. Here's an example of an effective command:
+Your task is to perform the specified action on the provided file using PowerShell. Take as many turns as you need. Make educated assumptions about the intended outcome, even if it requires taking some risks. Ensure that you keep your workspace tidy by using the Temp folder effectively, and make sure to clean up after you're done. Make sure you confirm the results of your actions before proceeding. Here are some guidelines to follow:
+Write efficient and smart PowerShell code, avoiding multiple commands in place of one if achievable. Here's an example of an effective command:
 
 $tempPath = (New-Item -Path (Join-Path $env:TEMP "file") -ItemType Directory -Force).FullName
 Expand-Archive -Path .\file.zip -DestinationPath $tempPath `
@@ -127,8 +128,15 @@ $messages = @(
     }
 )
 
+if (Test-Path (Join-Path $PSScriptRoot "instructions.txt")) {
+    $instructions = (Get-Content (Join-Path $PSScriptRoot "instructions.txt")) -join "`n"
+    $messages += @{
+        role    = "system";
+        content = $instructions;
+    }
+}
+
 $finished = $false
-$global:executionLog = @()
 
 # main loop
 do {
@@ -165,7 +173,8 @@ do {
             # handle the function call
             switch ($functionName) {
                 "command" {
-                    $global:executionLog += $arguments.command
+                    $log = "$(Get-Date) - $($arguments.command)"
+                    $log | Out-File -Append -FilePath (Join-Path $PSScriptRoot "execution.log")
 
                     if ($SafeMode) {
                         Write-Host "The install assistant wants to execute the following command:"
