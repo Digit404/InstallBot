@@ -1,6 +1,6 @@
-# Install GPT
+# InstallBot
 
-InstallGPT is an intelligent PowerShell-based installer that uses OpenAI's GPT model to perform various installation and file-related tasks. It's designed to be flexible, efficient, and capable of handling a wide range of installation scenarios.
+InstallBot is an intelligent PowerShell-based installer that uses OpenAI's GPT model to perform various installation and file-related tasks. It's designed to be flexible, efficient, and capable of handling a wide range of installation scenarios.
 
 ## Features
 
@@ -23,13 +23,13 @@ InstallGPT is an intelligent PowerShell-based installer that uses OpenAI's GPT m
 ## Usage
 
 ```powershell
-.\InstallGPT.ps1 -file <path_to_file> [-SafeMode] [-action <action_description>]
+.\InstallBot.ps1 -file <path_to_file> [-SafeMode] [-action <action_description>]
 ```
 
 ### Example
 
 ```powershell
-.\InstallGPT.ps1 -file ".\audacity-win-3.6.4-64bit.zip" -SafeMode -action "install to .\audacity"
+.\InstallBot.ps1 -file ".\audacity-win-3.6.4-64bit.zip" -SafeMode -action "install to .\audacity"
 ```
 
 ### Parameters
